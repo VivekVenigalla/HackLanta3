@@ -1,60 +1,129 @@
-# ExpressiveLive: Kinetic Captions & Outbound Voice
+# ExpressiveLive
 
-A Chrome extension (Manifest V3) built for **Hacklanta**.
+**Captions that show *how* something was said, and a voice that can say it back with feeling.**
 
-- **Hear it:** live captions for any tab (YouTube, Twitch, Meet, Zoom Web) or your mic. The captions *move with the voice*: whispers render thin and faded, normal speech sits at regular weight, and shouting slams in at weight 900 with a micro-shake.
-- **Say it:** a slide-out drawer (`Alt+V`) where you type a reply, pick a mood, and hear it spoken right away through **ElevenLabs**.
-
+A Chrome extension built for **Hacklanta**.
 Prize tracks: **MLH Best Use of ElevenLabs** · **Zero Data Challenge**
 
-## Setup
-1. Copy `config.example.js` to `config.js` (a placeholder copy is already there) and paste your ElevenLabs API key.
-2. Go to `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick this folder.
-3. Open a page with audio, click the ExpressiveLive icon, and choose **Tab audio** or **Microphone**, then **Start**.
-4. Press `Alt+V` (or click the **Voice** pill) to open the outbound voice drawer.
+---
 
-If `Alt+V` clashes with another shortcut, rebind it at `chrome://extensions/shortcuts`.
+## Why we built it
 
-## Architecture
+Standard captions flatten speech. A whisper, a joke, a scream and a sarcastic aside all show up as the same plain white text. Deaf and hard-of-hearing viewers lose the tone, the emphasis and the emotion, and often can't tell what a moment actually *felt* like.
+
+ExpressiveLive puts that back, in any browser tab, live:
+
+1. **Expressive captions (inbound).** Captures audio from any tab (YouTube, Twitch, Google Meet, Zoom Web) or your microphone and draws live captions that *move with the voice*.
+   - Whispers are small, thin and faded.
+   - Shouts are big and heavy, and they shake.
+   - Words lift or sink with pitch, so questions visibly rise.
+   - Every finished line gets an on-device **mood** chip, such as 🤩 Excited, 😠 Angry or 😔 Sad.
+
+   The design follows *Caption with Intention*, the award-winning accessibility captioning system from FCB Chicago and the Chicago Hearing Society.
+2. **Expressive voice (outbound).** For people who prefer typing to speaking, a slide-out drawer turns a typed reply into emotional speech through **ElevenLabs**. You pick a mood (Excited, Calm, Whisper or Dramatic) and it plays immediately.
+3. **Zero data.** No accounts, no servers, no tracking, nothing saved. Audio and text exist only in memory for as long as it takes to process them.
+
+---
+
+## 🚀 How to run it (about 3 minutes)
+
+### What you need
+- **Google Chrome 116 or newer**, or another Chromium browser such as Edge, Brave or Arc.
+- **An ElevenLabs API key.** Get a free one at [elevenlabs.io](https://elevenlabs.io): click your profile, then **API Keys**, then **Create**. The key needs access to **Text to Speech** and **Speech to Text**.
+
+There's nothing to install or build: no npm, no server, no compile step.
+
+### Step 1: Add your API key
+Open **`config.js`** in the project root and replace the placeholder:
+
+```js
+ELEVENLABS_API_KEY: 'YOUR_ELEVENLABS_API_KEY',   // ← paste your key here
 ```
-popup ──START_CAPTURE──▶ service worker ──tabCapture.getMediaStreamId──┐
-                              │  mints single-use Scribe token          │
-                              ▼                                          ▼
-                       offscreen document  (AudioContext)
-                         MediaStream ─┬─▶ destination (you still hear the tab)
-                                      ├─▶ AnalyserNode (fft 256) ─▶ RMS 0..1 (EMA)
-                                      └─▶ AudioWorklet ─▶ 16 kHz PCM ─▶ WSS ElevenLabs Scribe v2 realtime
-                         transcript + RMS ──▶ service worker ──▶ content script (closed Shadow DOM HUD)
 
-drawer ──SPEAK{text,mood}──▶ service worker ──▶ offscreen: POST /v1/text-to-speech/{voice}/stream
-                                                 └─▶ MediaSource streaming playback (starts on first chunk)
+If `config.js` is missing, for example after a fresh clone, create it from the template first:
+
+```bash
+cp config.example.js config.js
 ```
 
-### Kinetic mapping (modeled on *Caption with Intention*)
-Each word is styled by how it was actually spoken. Loudness and pitch are tracked locally ([offscreen/prosody.js](offscreen/prosody.js)) and matched to the word's exact timestamps from Scribe.
+### Step 2: Load the extension into Chrome
+1. Go to **`chrome://extensions`**.
+2. Turn on **Developer mode** (toggle in the top-right).
+3. Click **Load unpacked** and select this project folder (the one containing `manifest.json`).
+4. Pin **ExpressiveLive** from the puzzle-piece menu so its icon stays in the toolbar.
 
-| Speech cue | Visual |
+> After changing any file, click the **↻ reload** icon on the ExpressiveLive card in `chrome://extensions`, then **refresh the web page** you're testing on.
+
+### Step 3: Try it out
+**See the captions without any audio first:**
+1. Open any normal web page, such as `https://www.youtube.com`.
+2. Click the ExpressiveLive icon, then **Preview kinetic captions**.
+3. A scripted demo plays: a whisper, a question, a shout and a sigh, each with its mood chip.
+
+**Live captions from a video or call:**
+1. Open a YouTube video (or a Meet, Twitch or Zoom Web tab) and press play.
+2. Click the ExpressiveLive icon, choose **Tab audio**, and click **Start live captions**.
+3. Captions appear at the bottom of the page and you still hear the audio normally. The first ~10 words show "calibrating" while the extension learns the speaker's normal volume.
+4. Drag the caption box anywhere; double-click it to snap back. Click **Stop** in the popup when done.
+
+**Live captions from your own voice:**
+1. In the popup, choose **Microphone**, then **Start live captions**.
+2. The first time, a tab opens asking for mic permission. Click **Grant**, close that tab, and click **Start** again.
+
+**Expressive voice:**
+1. On any page, press **`Alt+V`** or click the **◉ Voice** pill in the bottom-right corner.
+2. Type something, pick a mood, and click **Speak** (or press `Ctrl/⌘+Enter`).
+
+### Troubleshooting
+
+| Problem | Fix |
 |---|---|
-| Loudness, **relative to the speaker's own baseline** | Font size 0.72×–1.5×, `wght` 200–900, `wdth` 75–145 |
-| Whisper (level < 0.3) | Condensed, slanted, faded; blurs in softly and "breathes" |
-| Shout (level > 0.72) | Black weight, extended width, glow; slams in, then shakes |
-| Pitch vs. the speaker's average | Word sits higher or lower on the line |
-| Rising or falling pitch within a word | Word climbs and tilts (questions) or sinks (trailing off) |
-| Speaker (when IDs are present) | Color |
+| "Token request failed (401)" | The API key in `config.js` is wrong or missing. Fix it, then reload the extension. |
+| Captions start, then stop with an error right away | Your ElevenLabs plan may not allow zero-retention mode. Set `STT_ZERO_RETENTION: false` in `config.js` and reload. |
+| Nothing shows up on the page | Refresh the page after loading or reloading the extension. Chrome's own pages (`chrome://…`, the Web Store) can't be captioned. |
+| "Microphone access is needed" | Grant it in the tab that opens. If you blocked it before, go to `chrome://settings/content/microphone` and allow ExpressiveLive. |
+| `Alt+V` does nothing | Another extension may own that shortcut. Rebind it at `chrome://extensions/shortcuts`, or click the Voice pill instead. |
+| No mood chips | The sentiment model takes about 1 s to load on the first line. Check that `SENTIMENT_ENABLED` is `true` in `config.js`. |
+| Something else | On `chrome://extensions`, click **service worker** on the ExpressiveLive card to open its console and look for errors. |
+
+---
+
+## How it works
+
+### Expressive captions
+```
+popup ──Start──▶ service worker ── tabCapture stream ID + one-time ElevenLabs token ──┐
+                                                                                     ▼
+                         offscreen document (Web Audio, runs in the background)
+                           audio ─┬─▶ speakers (you still hear the tab)
+                                  ├─▶ prosody.js: loudness + pitch, measured locally, every 33 ms
+                                  └─▶ 16 kHz audio ─▶ ElevenLabs Scribe realtime (speech-to-text)
+                           words + timestamps ─▶ style each word by how it was spoken
+                           finished line ─▶ sentiment.js (on-device model) ─▶ mood
+                                  │
+                                  ▼
+                         content script ─▶ caption overlay drawn on the page (isolated from site CSS)
+```
+
+**What each speech cue looks like:**
+
+| What the voice does | What the caption does |
+|---|---|
+| Louder than this speaker's normal | Bigger, heavier, wider letters |
+| Whispered | Small, light, narrow, slanted, faded; drifts in softly |
+| Shouted | Heaviest weight, wide, glowing; slams in and shakes |
+| Higher or lower pitch than normal | Word sits higher or lower on the line |
+| Pitch rising or falling within a word | Word tilts upward (a question) or sinks (trailing off) |
+| A different speaker (when detected) | Different color |
 | Timing | Words appear in the rhythm they were spoken |
 
-**Calibration:** a word's loudness is the 80th-percentile dB over its own timestamps. It is compared with the same measure for the speaker's last ~80 finished words (median ± robust spread). So about 1 word in 7 reads as loud and 1 in 6 as a whisper, whatever the source volume. For the first ~10 words the HUD shows "calibrating" and keeps the styling subtle.
+**Calibration.** Loudness is judged *relative to the speaker's recent words*, not on a fixed scale. A loud YouTube mix and a quiet laptop mic both get the full whisper-to-shout range, and ordinary speech stays ordinary: about 1 word in 7 is styled loud and 1 in 6 as a whisper.
 
-Loudness is relative, so a loud YouTube mix and a quiet laptop mic both cover the full whisper-to-shout range. Partial transcripts get an estimate first; each word is then refined in place when its exact timings arrive. Use **Preview kinetic captions** in the popup to see the full range without audio. Captions fade after 3.5 s of silence and their DOM nodes are deleted. The HUD can be dragged; double-click it to re-anchor.
+**Mood.** When a line finishes, a small sentiment model (DistilBERT) running *inside the extension* reads whether the words are positive or negative. The voice measurements say how energetic the delivery was. Together they pick a mood: 🤩 Excited, 🙂 Positive, ☺️ Warm, 😠 Angry, 🙁 Negative, 😔 Sad, ❗ Emphatic or 🤫 Quiet. Neutral lines get no chip. So "best day ever" whispered shows as *Warm*, and shouted as *Excited*.
 
-### On-device sentiment
-Each finished caption line gets a mood chip (🤩 Excited, 🙂 Positive, ☺️ Warm, 😠 Angry, 🙁 Negative, 😔 Sad, ❗ Emphatic, 🤫 Quiet; neutral lines get none) and a tinted underline.
-- **Valence (what was said):** DistilBERT fine-tuned on SST-2, quantized ONNX, run by transformers.js on WASM inside the offscreen document. Model and runtime are bundled in `models/` and `vendor/` (~100 MB) and load in about 0.7 s; inference takes about 40 ms per line. Low-confidence scores count as neutral.
-- **Arousal (how it was said):** average word loudness, share of loud words, and pitch movement.
-- These combine into a valence × arousal grid, so "best day ever" whispered is *Warm* and shouted is *Excited*.
-- Turn it off with `SENTIMENT_ENABLED: false` in `config.js`.
+### Expressive voice (ElevenLabs)
+Each mood maps to ElevenLabs `voice_settings` and is sent to the streaming text-to-speech endpoint with the `eleven_multilingual_v2` model. Playback begins as soon as the first audio chunk arrives.
 
-### Mood → ElevenLabs `voice_settings`
 | Mood | stability | similarity_boost | style |
 |---|---|---|---|
 | Excited | 0.30 | 0.85 | 0.70 |
@@ -62,15 +131,58 @@ Each finished caption line gets a mood chip (🤩 Excited, 🙂 Positive, ☺️
 | Whisper / Intimate | 0.40 | 0.80 | 0.50 |
 | Dramatic / Urgent | 0.20 | 0.90 | 0.80 |
 
-The default model is `eleven_multilingual_v2` with `use_speaker_boost: true`. If you set `TTS_MODEL_ID` to `eleven_v3`, each mood also adds an inline audio tag (e.g. `[whispers]`).
+You can change the voice in the drawer under **Voice**; the default is Rachel. If you set `TTS_MODEL_ID: 'eleven_v3'` in `config.js`, each mood also adds an inline audio tag such as `[whispers]`.
 
-## Zero Data guarantees
+ElevenLabs is used for **both directions**: Scribe realtime for the captions and TTS for the voice, with one key.
+
+---
+
+## 🔒 Zero Data guarantees
 - **No accounts, no telemetry, no analytics, no cookies, no backend, no database.**
-- Audio is held only in 100 ms worklet buffers that are sent and dropped. Nothing is queued before the socket opens.
-- Transcripts exist only as in-flight messages and caption DOM nodes, which are removed after they fade. Nothing is logged to the console.
-- Typed TTS text is cleared from the drawer once it is spoken.
-- Nothing is written to `chrome.storage.local`. Only capture state (`capturing/tabId/mode`, never content) goes to `chrome.storage.session`, which is memory-only and cleared when the browser closes.
-- STT sessions request ElevenLabs **zero-retention** (`enable_logging=false`). Some plans don't allow this; if the socket errors on connect, set `STT_ZERO_RETENTION: false` in `config.js`.
-- The only network host contacted is `api.elevenlabs.io`. The font, the sentiment model and its runtime are bundled locally. Remote model downloads and browser model caching are both disabled.
+- **Audio** is processed in 100 ms pieces that are sent for transcription and immediately dropped. Nothing is recorded.
+- **Transcripts** exist only on screen. Caption lines are deleted from the page after 3.5 s of silence, and nothing is logged.
+- **Typed voice text** is cleared from the drawer as soon as it's spoken.
+- **Nothing is saved to disk.** The only stored state is whether captions are on and for which tab, kept in memory-only session storage that's wiped when Chrome closes.
+- **Sentiment runs fully on-device.** The model ships inside the extension, and downloading or caching models is disabled. Caption text never leaves your browser for this.
+- The **only** network destination is `api.elevenlabs.io`, and transcription requests ask ElevenLabs not to retain audio (`enable_logging=false`).
 
-Your API key sits in `config.js`, which is gitignored. Anyone who installs a build containing that file can read the key, so share builds only with a throwaway key.
+---
+
+## Configuration (`config.js`)
+
+| Setting | Default | What it does |
+|---|---|---|
+| `ELEVENLABS_API_KEY` | (required) | Your ElevenLabs key. |
+| `DEFAULT_VOICE_ID` | `21m00Tcm4TlvDq8ikWAM` (Rachel) | Voice used by the drawer. |
+| `TTS_MODEL_ID` | `eleven_multilingual_v2` | Set to `eleven_v3` to enable inline mood tags. |
+| `STT_MODEL_ID` | `scribe_v2_realtime` | Speech-to-text model. |
+| `STT_ZERO_RETENTION` | `true` | Asks ElevenLabs not to keep audio. Set to `false` if your plan rejects it. |
+| `SENTIMENT_ENABLED` | `true` | Turns the mood chips on or off. |
+
+> ⚠️ `config.js` is gitignored so your key isn't committed. Anyone you give a packaged copy of the extension to can read the key inside it, so share builds only with a throwaway key.
+
+---
+
+## Project structure
+```
+manifest.json               Extension manifest (MV3)
+config.example.js           Settings template → copy to config.js
+background/service_worker.js  Message router, tab capture, ElevenLabs token, TTS requests
+offscreen/
+  offscreen.js              Audio engine: capture, speech-to-text socket, word styling, TTS playback
+  prosody.js                Loudness + pitch tracking and calibration
+  sentiment.js              On-device mood detection
+  pcm-worklet.js            Converts audio to 16 kHz for speech-to-text
+content/
+  content.js                Caption overlay, voice drawer, demo
+  overlay.css               Kinetic typography and animations
+popup/                      Toolbar popup (start/stop, source, size, demo)
+permission/                 One-time microphone permission page
+styles/                     Bundled Roboto Flex variable font
+models/sentiment/           Bundled DistilBERT SST-2 model (quantized ONNX, ~68 MB)
+vendor/transformers/        Bundled transformers.js + ONNX runtime (WASM)
+```
+
+**Built with:** Chrome Extensions (Manifest V3), Web Audio API, ElevenLabs Scribe realtime and Text-to-Speech, transformers.js, Roboto Flex variable font.
+
+**Credits:** the caption design is inspired by [Caption with Intention](https://lbbonline.com/news/behind-the-oscar-winning-caption-revolution) (FCB Chicago, Chicago Hearing Society and Rakish Entertainment).
