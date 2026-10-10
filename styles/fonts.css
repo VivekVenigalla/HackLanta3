@@ -1,0 +1,11 @@
+/* Bundled Roboto Flex variable font (latin subset, wght 100–1000, opsz 8–144).
+   Registered at runtime by content.js via the FontFace API so it works inside
+   the closed shadow root and on sites with strict CSP. Kept here for reference
+   and for extension pages (popup). */
+@font-face {
+  font-family: 'ExpressiveFlex';
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: swap;
+  src: url('fonts/RobotoFlex-latin.woff2') format('woff2');
+}

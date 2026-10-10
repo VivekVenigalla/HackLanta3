@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ExpressiveLive</title>
+    <link rel="stylesheet" href="../styles/fonts.css">
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="logo">E</span>
+        <div>
+          <h1>ExpressiveLive</h1>
+          <p>Kinetic captions · Expressive voice</p>
+        </div>
+      </div>
+      <span id="status" class="status"><span class="dot"></span><span id="status-text">Idle</span></span>
+    </header>
+
+    <section>
+      <div class="label">Caption source</div>
+      <div class="seg" role="radiogroup">
+        <button type="button" class="seg-btn active" data-mode="tab" role="radio" aria-checked="true">Tab audio</button>
+        <button type="button" class="seg-btn" data-mode="mic" role="radio" aria-checked="false">Microphone</button>
+      </div>
+      <button type="button" id="toggle" class="primary">Start live captions</button>
+      <div id="error" class="error" hidden></div>
+    </section>
+
+    <section>
+      <div class="row">
+        <label class="label" for="size">Caption size</label>
+        <span id="size-val" class="mono">30px</span>
+      </div>
+      <input id="size" type="range" min="18" max="56" value="30">
+      <button type="button" id="demo" class="secondary">Preview kinetic captions</button>
+    </section>
+
+    <button type="button" id="drawer" class="secondary">Open voice drawer <kbd>Alt</kbd><kbd>V</kbd></button>
+
+    <footer class="zero">
+      <strong>Zero Data</strong>
+      <span>No accounts · No telemetry · Nothing stored · Audio lives only in RAM</span>
+    </footer>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

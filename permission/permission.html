@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ExpressiveLive · Microphone access</title>
+    <link rel="stylesheet" href="../styles/fonts.css">
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0e0e14; color: #f5f5fa;
+             font: 400 15px/1.5 'ExpressiveFlex', system-ui, sans-serif; }
+      main { max-width: 420px; padding: 32px; border-radius: 20px; background: #17171f; border: 1px solid rgba(255,255,255,.09); text-align: center; }
+      h1 { font-size: 22px; font-weight: 850; margin: 0 0 8px; }
+      p { color: rgba(245,245,250,.65); margin: 0 0 20px; }
+      button { padding: 12px 20px; border: 0; border-radius: 12px; color: #fff; font: 800 14px/1 inherit; font-family: inherit;
+               background: linear-gradient(135deg, #8b7bff, #6a5cff); cursor: pointer; }
+      #msg { margin-top: 16px; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Allow microphone</h1>
+      <p>ExpressiveLive needs your mic to caption your own voice. Audio is processed in memory and streamed only to ElevenLabs for transcription. Nothing is recorded or stored.</p>
+      <button id="grant" type="button">Grant microphone access</button>
+      <div id="msg"></div>
+    </main>
+    <script src="permission.js"></script>
+  </body>
+</html>

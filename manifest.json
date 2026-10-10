@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "ExpressiveLive - Kinetic Captions & Outbound Voice",
+  "short_name": "ExpressiveLive",
+  "version": "1.0.0",
+  "description": "Kinetic, volume-reactive live captions plus expressive ElevenLabs voice replies. Zero data: nothing stored, ever.",
+  "minimum_chrome_version": "116",
+  "permissions": ["tabCapture", "offscreen", "activeTab", "storage", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
+  "background": {
+    "service_worker": "background/service_worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "ExpressiveLive",
+    "default_popup": "popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "toggle-drawer": {
+      "suggested_key": { "default": "Alt+V" },
+      "description": "Toggle the outbound voice drawer"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["content/overlay.css", "styles/fonts.css", "styles/fonts/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
